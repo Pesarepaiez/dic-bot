@@ -74,7 +74,7 @@ def send_welcome(message):
 
     🏆 Try searching for any word now!
 
-    📌 Follow our Telegram channel: @dictionaryai_bot""",
+    📌 Follow our Telegram channel: t.me/dictionaryai_bot""",
     parse_mode="HTML",
     reply_markup=create_inline_button()
     )
