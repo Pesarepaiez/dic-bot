@@ -1,10 +1,11 @@
 import telebot
 import requests
-import time  # Add a time delay to avoid spam
+import time  
+import re  
 
 # Your Telegram Bot Token
-BOT_TOKEN = "8058388234:AAEz9jW2tHlcbfyXC8daCC-rEnbxWzy4dLY"
-bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")  # Ensure HTML formatting works
+BOT_TOKEN = "5909441299:AAEv7WSNh2lrRFTa7gAhH9x8wzOembjmD94"
+bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")  
 
 # Free Dictionary API URL
 DICTIONARY_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/"
@@ -22,7 +23,7 @@ def get_definition(word):
         return part_of_speech, meaning
     return None, None
 
-# Add buttons for the 9 channels (with links)
+# Add buttons for the 12 channels (with links)
 def create_inline_button():
     keyboard = telebot.types.InlineKeyboardMarkup()
     
@@ -61,6 +62,17 @@ def create_inline_button():
     
     return keyboard
 
+# Function to clean words (remove numbers like "1." or standalone numbers)
+def clean_words(input_text):
+    words = input_text.replace("\n", ",").split(",")  
+    cleaned_words = []
+    
+    for word in words:
+        word = re.sub(r'^\d+\.?', '', word).strip().lower()  # Remove leading numbers and dots
+        if word and not re.search(r'\d', word):  # Ensure it doesn't contain other numbers
+            cleaned_words.append(word)
+    
+    return cleaned_words
 
 # Start command
 @bot.message_handler(commands=['start'])
@@ -69,29 +81,26 @@ def send_welcome(message):
     bot.reply_to(
     message, 
     """🚀 𝚆𝚎𝚕𝚌𝚘𝚖𝚎 𝚝𝚘 𝚢𝚘𝚞𝚛 𝚞𝚕𝚝𝚒𝚖𝚊𝚝𝚎 𝙳𝚒𝚌𝚝𝚒𝚘𝚗𝚊𝚛𝚢 𝙱𝚘𝚝! 📚🔍
-
     𝙴𝚡𝚌𝚒𝚝𝚎𝚍 𝚝𝚘 𝚍𝚒𝚟𝚎 𝚒𝚗𝚝𝚘 𝚝𝚑𝚎 𝚎𝚗𝚌𝚑𝚊𝚗𝚝𝚒𝚗𝚐 𝚠𝚘𝚛𝚕𝚍 𝚘𝚏 𝚠𝚘𝚛𝚍𝚜? 🌍✨ 
 
-    🏆 Try searching for any word now!
-
-    📌 Follow our Telegram channel: t.me/dictionaryai_bot""",
+  🏆 𝗧𝗿𝘆 𝘀𝗲𝗮𝗿𝗰𝗵𝗶𝗻𝗴 𝗳𝗼𝗿 𝗮𝗻𝘆 𝘄𝗼𝗿𝗱 𝗻𝗼𝘄!
+📌 join: <a href="https://t.me/+ojJjzjv3CBEyOWZl">𝑬𝒍𝒊𝒕𝒆 𝑻𝑶𝑬𝑭𝑳 𝑨𝒄𝒂𝒅𝒆𝒎𝒚 | 𝚅𝚘𝚌𝚊𝚋𝚞𝚕𝚊𝚛𝚢</a>""",
     parse_mode="HTML",
     reply_markup=create_inline_button()
     )
 
-# Handle multiple words (comma or newline separated)
+# Handle words input
 @bot.message_handler(func=lambda message: True)
 def handle_word(message):
-    words = message.text.replace("\n", ",").split(",")  # Handle both comma and newline separation
-    words = [word.strip().lower() for word in words if word.strip()]  # Clean up words
-    
+    words = clean_words(message.text)  
+
     if not words:
         bot.reply_to(message, "❌ <b>Please enter at least one valid word.</b>", parse_mode="HTML")
         return
 
     for word in words:
         part_of_speech, meaning = get_definition(word)
-        
+
         if meaning:
             reply_text = f"""
 📖 <b>Word:</b> <code>{word}</code>
