@@ -4,7 +4,7 @@ import time
 import re  
 
 # Your Telegram Bot Token
-BOT_TOKEN = "5909441299:AAEv7WSNh2lrRFTa7gAhH9x8wzOembjmD94"
+BOT_TOKEN = "8058388234:AAEz9jW2tHlcbfyXC8daCC-rEnbxWzy4dLY"
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")  
 
 # Free Dictionary API URL
