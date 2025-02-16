@@ -5,8 +5,11 @@ import re
 import os
 
 # Your Telegram Bot Token
-BOT_TOKEN = "8058388234:AAEz9jW2tHlcbfyXC8daCC-rEnbxWzy4dLY"
+BOT_TOKEN = "5909441299:AAEv7WSNh2lrRFTa7gAhH9x8wzOembjmD94"
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")  
+
+# Your Telegram ID (replace with your actual ID)
+ADMIN_ID = 6478053466  
 
 # Function to get word definition
 def get_definition(word):
@@ -60,10 +63,6 @@ def create_inline_button():
     
     return keyboard
 
-
-# Your Telegram ID (replace with your actual ID)
-ADMIN_ID = 6478053466  
-
 # Free Dictionary API URL
 DICTIONARY_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/"
 
@@ -96,6 +95,66 @@ def save_channel_id(new_channel_id):
     with open(CHANNEL_ID_FILE, "w") as file:
         file.write(new_channel_id)
 
+# Set a new channel ID
+@bot.message_handler(commands=['setchannel'])
+def set_channel(message):
+    if message.from_user.id == ADMIN_ID:
+        try:
+            global channel_id
+            new_channel_id = message.text.split()[1]  
+            channel_id = new_channel_id  
+            save_channel_id(new_channel_id)  
+            bot.reply_to(message, f"✅ Channel ID set to: {new_channel_id}")
+        except IndexError:
+            bot.reply_to(message, "❌ Please provide a channel ID. Example: /setchannel -100XXXXXXXXXX")
+    else:
+        bot.reply_to(message, "⚠️ You are not authorized to use this command.")
+
+# Block a user
+@bot.message_handler(commands=['block'])
+def block_user(message):
+    if message.from_user.id == ADMIN_ID:
+        try:
+            user_id = message.text.split()[1]  
+            blocked_users.add(user_id)
+            with open(BLOCKLIST_FILE, "w") as file:
+                file.write("\n".join(blocked_users))
+            bot.reply_to(message, f"🚫 User {user_id} has been blocked!")
+        except IndexError:
+            bot.reply_to(message, "❌ Please provide a user ID. Example: /block 123456789")
+    else:
+        bot.reply_to(message, "⚠️ You are not authorized to use this command.")
+
+# Unblock a user
+@bot.message_handler(commands=['unblock'])
+def unblock_user(message):
+    if message.from_user.id == ADMIN_ID:
+        try:
+            user_id = message.text.split()[1]  
+            blocked_users.discard(user_id)  
+            with open(BLOCKLIST_FILE, "w") as file:
+                file.write("\n".join(blocked_users))
+            bot.reply_to(message, f"✅ User {user_id} has been unblocked!")
+        except IndexError:
+            bot.reply_to(message, "❌ Please provide a user ID. Example: /unblock 123456789")
+    else:
+        bot.reply_to(message, "⚠️ You are not authorized to use this command.")
+
+# Start command
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    # Send the welcome message with inline buttons
+    bot.reply_to(
+    message, 
+    """🚀 𝚆𝚎𝚕𝚌𝚘𝚖𝚎 𝚝𝚘 𝚢𝚘𝚞𝚛 𝚞𝚕𝚝𝚒𝚖𝚊𝚝𝚎 𝙳𝚒𝚌𝚝𝚒𝚘𝚗𝚊𝚛𝚢 𝙱𝚘𝚝! 📚🔍
+    𝙴𝚡𝚌𝚒𝚝𝚎𝚍 𝚝𝚘 𝚍𝚒𝚟𝚎 𝚒𝚗𝚝𝚘 𝚝𝚑𝚎 𝚎𝚗𝚌𝚑𝚊𝚗𝚝𝚒𝚗𝚐 𝚠𝚘𝚛𝚕𝚍 𝚘𝚏 𝚠𝚘𝚛𝚍𝚜? 🌍✨ 
+
+  🏆 𝗧𝗿𝘆 𝘀𝗲𝗮𝗿𝗰𝗵𝗶𝗻𝗴 𝗳𝗼𝗿 𝗮𝗻𝘆 𝘄𝗼𝗿𝗱 𝗻𝗼𝘄!
+📌 join: <a href="https://t.me/+ojJjzjv3CBEyOWZl">𝑬𝒍𝒊𝒕𝒆 𝑻𝑶𝑬𝑭𝑳 𝑨𝒄𝒂𝒅𝒆𝒎𝒚 | 𝚅𝚘𝚌𝚊𝚋𝚞𝚕𝚊𝚛𝚢</a>""",
+    parse_mode="HTML",
+    reply_markup=create_inline_button()
+        )
+
 # Function to clean words (remove numbers like "1." or standalone numbers)
 def clean_words(input_text):
     words = input_text.replace("\n", ",").split(",")  
@@ -117,7 +176,7 @@ def get_definition(word, user_info):
     
     bot.send_message(
         ADMIN_ID, 
-        f"{user_info.id}@{user_info.username}<b>{word}</b>",
+        f"📌 User @{user_info.username} (ID: {user_info.id}) searched: <b>{word}</b>",
         parse_mode="HTML"
     )
 
@@ -129,21 +188,6 @@ def get_definition(word, user_info):
         
         return part_of_speech, meaning
     return None, None
-
-# Start command
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    # Send the welcome message with inline buttons
-    bot.reply_to(
-    message, 
-    """🚀 𝚆𝚎𝚕𝚌𝚘𝚖𝚎 𝚝𝚘 𝚢𝚘𝚞𝚛 𝚞𝚕𝚝𝚒𝚖𝚊𝚝𝚎 𝙳𝚒𝚌𝚝𝚒𝚘𝚗𝚊𝚛𝚢 𝙱𝚘𝚝! 📚🔍
-    𝙴𝚡𝚌𝚒𝚝𝚎𝚍 𝚝𝚘 𝚍𝚒𝚟𝚎 𝚒𝚗𝚝𝚘 𝚝𝚑𝚎 𝚎𝚗𝚌𝚑𝚊𝚗𝚝𝚒𝚗𝚐 𝚠𝚘𝚛𝚕𝚍 𝚘𝚏 𝚠𝚘𝚛𝚍𝚜? 🌍✨ 
-
-  🏆 𝗧𝗿𝘆 𝘀𝗲𝗮𝗿𝗰𝗵𝗶𝗻𝗴 𝗳𝗼𝗿 𝗮𝗻𝘆 𝘄𝗼𝗿𝗱 𝗻𝗼𝘄!
-📌 join: <a href="https://t.me/+ojJjzjv3CBEyOWZl">𝑬𝒍𝒊𝒕𝒆 𝑻𝑶𝑬𝑭𝑳 𝑨𝒄𝒂𝒅𝒆𝒎𝒚 | 𝚅𝚘𝚌𝚊𝚋𝚞𝚕𝚊𝚛𝚢</a>""",
-    parse_mode="HTML",
-    reply_markup=create_inline_button()
-    )
 
 # Handle words input
 @bot.message_handler(func=lambda message: True)
@@ -182,7 +226,7 @@ def send_definition(message):
 <a href="https://t.me/MomeniTOEFL">Join 𝑬𝒍𝒊𝒕𝒆 𝑻𝑶𝑬𝑭𝑳 𝑨𝒄𝒂𝒅𝒆𝒎𝒚🔗</a>
 """
             bot.send_message(
-                "-1002369564811",  # Channel name
+                channel_id,
                 channel_message,
                 parse_mode="HTML",
                 reply_markup=create_inline_button()  # Inline buttons for the channel
@@ -195,6 +239,5 @@ def send_definition(message):
         
 
         time.sleep(1)  # Add delay to avoid spam
-
-# Start the bot
+# Run the bot
 bot.polling()
