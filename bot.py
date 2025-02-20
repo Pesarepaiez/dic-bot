@@ -12,7 +12,7 @@ from urllib3.exceptions import InsecureRequestWarning
 warnings.simplefilter('ignore', InsecureRequestWarning)
 
 # Your Telegram Bot Token
-BOT_TOKEN = "8122882322:AAFc9SNrdpq_nd1vY3dUsD53PTodKj16bMk"
+BOT_TOKEN = "8058388234:AAH1E2l5kS5g4Vmv0XCthqN3H_bSdqmIPkI"
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")  
 
 # Free Dictionary API URL
