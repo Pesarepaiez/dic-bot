@@ -310,6 +310,14 @@ def send_welcome(message):
     reply_markup=create_inline_button()
     )
 
+# Function to handle errors when sending messages
+def safe_send_message(chat_id, text, parse_mode="HTML", reply_markup=None):
+    try:
+        return bot.send_message(chat_id, text, parse_mode=parse_mode, reply_markup=reply_markup)
+    except telebot.apihelper.ApiTelegramException as e:
+        print(f"Failed to send message to {chat_id}: {e}")
+        return None
+
 # Command to translate text
 @bot.message_handler(commands=['translate'])
 def send_translation(message):
@@ -393,24 +401,25 @@ Example:
 
         # Send to the set channel if available
         if channel_id:
-            sent_message = bot.send_message(
+            sent_message = safe_send_message(
                 channel_id,
                 reply_text,
                 parse_mode="HTML",
                 reply_markup=create_inline_button()  # Inline buttons for the channel
             )
 
-            # Forward the message from the channel to the group and the user's private chat
-            group_username = "@afghan_congres"
-            bot.forward_message(group_username, channel_id, sent_message.message_id)
-            bot.forward_message(message.chat.id, channel_id, sent_message.message_id)
+            if sent_message:
+                # Forward the message from the channel to the group and the user's private chat
+                group_username = "@afghan_congres"
+                bot.forward_message(group_username, channel_id, sent_message.message_id)
+                bot.forward_message(message.chat.id, channel_id, sent_message.message_id)
         else:
             # Send directly to the user's private chat if no channel is set
-            bot.send_message(message.chat.id, reply_text, parse_mode="HTML")
+            safe_send_message(message.chat.id, reply_text, parse_mode="HTML")
 
             # Send to the specified Telegram group
             group_username = "@afghan_congres"
-            bot.send_message(
+            safe_send_message(
                 group_username,
                 reply_text,
                 parse_mode="HTML",
