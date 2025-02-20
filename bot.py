@@ -315,7 +315,10 @@ def safe_send_message(chat_id, text, parse_mode="HTML", reply_markup=None):
     try:
         return bot.send_message(chat_id, text, parse_mode=parse_mode, reply_markup=reply_markup)
     except telebot.apihelper.ApiTelegramException as e:
-        print(f"Failed to send message to {chat_id}: {e}")
+        if "chat not found" in str(e):
+            print(f"Chat not found: {chat_id}")
+        else:
+            print(f"Failed to send message to {chat_id}: {e}")
         return None
 
 # Command to translate text
