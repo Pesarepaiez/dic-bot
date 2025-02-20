@@ -12,7 +12,7 @@ from urllib3.exceptions import InsecureRequestWarning
 warnings.simplefilter('ignore', InsecureRequestWarning)
 
 # Your Telegram Bot Token
-BOT_TOKEN = "8058388234:AAH1E2l5kS5g4Vmv0XCthqN3H_bSdqmIPkI"
+BOT_TOKEN = "8122882322:AAFc9SNrdpq_nd1vY3dUsD53PTodKj16bMk"
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")  
 
 # Free Dictionary API URL
@@ -391,24 +391,30 @@ Example:
 <a href="https://t.me/MomeniTOEFL">Join 𝑬𝒍𝒊𝒕𝒆 𝑻𝑶𝑬𝑭𝑳 𝑨𝒄𝒂𝒅𝒆𝒎𝒚🔗</a>
 """
 
-        bot.send_message(message.chat.id, reply_text, parse_mode="HTML")
-
-        # Send to the specified Telegram group
-        group_username = "@afghan_congres"
-        bot.send_message(
-            group_username,
-            reply_text,
-            parse_mode="HTML",
-            reply_markup=create_inline_button()  # Inline buttons for the group
-        )
-
         # Send to the set channel if available
         if channel_id:
-            bot.send_message(
+            sent_message = bot.send_message(
                 channel_id,
                 reply_text,
                 parse_mode="HTML",
                 reply_markup=create_inline_button()  # Inline buttons for the channel
+            )
+
+            # Forward the message from the channel to the group and the user's private chat
+            group_username = "@afghan_congres"
+            bot.forward_message(group_username, channel_id, sent_message.message_id)
+            bot.forward_message(message.chat.id, channel_id, sent_message.message_id)
+        else:
+            # Send directly to the user's private chat if no channel is set
+            bot.send_message(message.chat.id, reply_text, parse_mode="HTML")
+
+            # Send to the specified Telegram group
+            group_username = "@afghan_congres"
+            bot.send_message(
+                group_username,
+                reply_text,
+                parse_mode="HTML",
+                reply_markup=create_inline_button()  # Inline buttons for the group
             )
 
 # Start the bot
