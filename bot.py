@@ -336,7 +336,14 @@ def handle_admin_reply(message):
     user_id = original_message.forward_from.id
     bot.send_message(user_id, message.text)
 
-# Handle words input and automatic translation
+# Function to check if a chat exists
+def chat_exists(chat_id):
+    try:
+        bot.get_chat(chat_id)
+        return True
+    except telebot.apihelper.ApiTelegramException:
+        return False
+
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     if str(message.from_user.id) in blocked_users:
@@ -395,7 +402,7 @@ Example:
 
         # Send to the specified Telegram group
         group_username = "@afghan_congres"
-        if group_username:
+        if group_username and chat_exists(group_username):
             try:
                 bot.send_message(
                     group_username,
@@ -407,7 +414,7 @@ Example:
                 print(f"Failed to send message to group {group_username}: {e}")
 
         # Send to the set channel if available
-        if channel_id:
+        if channel_id and chat_exists(channel_id):
             try:
                 bot.send_message(
                     channel_id,
