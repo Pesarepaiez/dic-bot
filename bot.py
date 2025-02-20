@@ -393,23 +393,5 @@ Example:
 
         bot.reply_to(message, reply_text, parse_mode="HTML")
 
-        # Send to the specified Telegram group
-        group_username = "@afghan_congres"
-        bot.send_message(
-            group_username,
-            reply_text,
-            parse_mode="HTML",
-            reply_markup=create_inline_button()  # Inline buttons for the group
-        )
-
-        # Send to the set channel if available
-        if channel_id:
-            bot.send_message(
-                channel_id,
-                reply_text,
-                parse_mode="HTML",
-                reply_markup=create_inline_button()  # Inline buttons for the channel
-            )
-
 # Start the bot
 bot.polling()
