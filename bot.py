@@ -7,9 +7,12 @@ import random
 import ssl
 import certifi
 import warnings
+from flask import Flask, request  # Import Flask
 # Suppress InsecureRequestWarning
 from urllib3.exceptions import InsecureRequestWarning
 warnings.simplefilter('ignore', InsecureRequestWarning)
+
+app = Flask(__name__)  # Initialize Flask app
 
 # Your Telegram Bot Token
 BOT_TOKEN = "8058388234:AAH1E2l5kS5g4Vmv0XCthqN3H_bSdqmIPkI"
@@ -429,5 +432,22 @@ Example:
                 reply_markup=create_inline_button()  # Inline buttons for the group
             )
 
-# Start the bot
-bot.polling()
+# Your webhook URL (replace with your actual URL)
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://dic-bot-production.up.railway.app/webhook")
+
+# Set webhook
+bot.remove_webhook()
+time.sleep(1)
+bot.set_webhook(url=WEBHOOK_URL)
+
+# Function to handle webhook updates
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    json_str = request.get_data().decode('UTF-8')
+    update = telebot.types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return '!', 200
+
+# Start Flask server
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv('PORT', 5000)))
