@@ -420,8 +420,9 @@ Example:
 
 # Ensure only one instance of the bot is running
 if __name__ == "__main__":
-    try:
-        bot.polling()
-    except Exception as e:
-        print(f"Error: {e}")
-        time.sleep(15)
+    while True:
+        try:
+            bot.polling()
+        except Exception as e:
+            print(f"Error: {e}")
+            time.sleep(15)
