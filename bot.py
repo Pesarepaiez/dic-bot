@@ -12,7 +12,7 @@ from urllib3.exceptions import InsecureRequestWarning
 warnings.simplefilter('ignore', InsecureRequestWarning)
 
 # Your Telegram Bot Token
-BOT_TOKEN = "8122882322:AAFc9SNrdpq_nd1vY3dUsD53PTodKj16bMk"
+BOT_TOKEN = "8058388234:AAH1E2l5kS5g4Vmv0XCthqN3H_bSdqmIPkI"
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")  
 
 # Free Dictionary API URL
@@ -26,11 +26,51 @@ MYMEMORY_API_URL = "https://api.mymemory.translated.net/get"
 # Random Facts API URL
 RANDOM_FACTS_API_URL = "https://uselessfacts.jsph.pl/random.json?language=en"
 
+# Add buttons for the 12 channels (with links)
+def create_inline_button():
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    
+    button_channel_1 = telebot.types.InlineKeyboardButton(
+        text="Writing", url="https://t.me/neo_writing"
+    )
+    button_channel_2 = telebot.types.InlineKeyboardButton(
+        text="Listening", url="https://t.me/tpo_listening1"
+    )
+    button_channel_3 = telebot.types.InlineKeyboardButton(
+        text="Speaking", url="https://t.me/+lWir8Hu6css5MGQ1"
+    )
+    button_channel_4 = telebot.types.InlineKeyboardButton(
+        text="Resources", url="https://t.me/+gPhXbnd49yk0NTI1"
+    )
+    button_channel_5 = telebot.types.InlineKeyboardButton(
+        text="YouTube Vocab", url="https://t.me/+oGceYYJCwrZjNDk9"
+    )
+    button_channel_6 = telebot.types.InlineKeyboardButton(
+        text="Ketab", url="https://t.me/ketab_pdfs"
+    )
+    button_channel_7 = telebot.types.InlineKeyboardButton(
+        text="TED Talks", url="https://t.me/moha_ted"
+    )
+    button_channel_8 = telebot.types.InlineKeyboardButton(
+        text="4000 Words", url="https://t.me/+bz-2dmJTxTowZGZl"
+    )
+    button_channel_9 = telebot.types.InlineKeyboardButton(
+        text="Extensive Reading", url="https://t.me/+OCr_ZwPHbCo4ZWM1"
+    )
+
+    # Add the buttons to the keyboard, 3 buttons in one row, 3 in the next row
+    keyboard.row(button_channel_1, button_channel_2, button_channel_3)
+    keyboard.row(button_channel_4, button_channel_5, button_channel_6)
+    keyboard.row(button_channel_7, button_channel_8, button_channel_9)
+    
+    return keyboard
+
 # Your Telegram ID (replace with your actual ID)
 ADMIN_ID = 6478053466  
 
 # File to store blocked users
 BLOCKLIST_FILE = "blocked_users.txt"
+CHANNEL_ID_FILE = "channel_id.txt"
 
 # Load blocked users
 def load_blocked_users():
@@ -41,6 +81,21 @@ def load_blocked_users():
         return set()
 
 blocked_users = load_blocked_users()
+
+# Load channel ID
+def load_channel_id():
+    try:
+        with open(CHANNEL_ID_FILE, "r") as file:
+            return file.read().strip()  
+    except FileNotFoundError:
+        return None  
+
+channel_id = load_channel_id()
+
+# Save channel ID
+def save_channel_id(new_channel_id):
+    with open(CHANNEL_ID_FILE, "w") as file:
+        file.write(new_channel_id)
 
 # Save blocked users
 def save_blocked_users():
@@ -88,6 +143,46 @@ def list_blocked_users(message):
         bot.reply_to(message, "🚫 Blocked users:\n" + "\n".join(blocked_users))
     else:
         bot.reply_to(message, "✅ No users are currently blocked.")
+
+# Command to set the channel ID
+@bot.message_handler(commands=['setchannel'])
+def set_channel(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.reply_to(message, "❌ You are not authorized to use this command.")
+        return
+
+    try:
+        new_channel_id = message.text.split()[1]
+        save_channel_id(new_channel_id)
+        global channel_id
+        channel_id = new_channel_id
+        bot.reply_to(message, f"✅ Channel ID has been set to {new_channel_id}.")
+    except IndexError:
+        bot.reply_to(message, "❌ Please provide a channel ID. Usage: /setchannel [channel_id]")
+
+# Command to get the current channel ID
+@bot.message_handler(commands=['getchannel'])
+def get_channel(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.reply_to(message, "❌ You are not authorized to use this command.")
+        return
+
+    if channel_id:
+        bot.reply_to(message, f"📢 Current channel ID: {channel_id}")
+    else:
+        bot.reply_to(message, "❌ No channel ID is set.")
+
+# Command to delete the current channel ID
+@bot.message_handler(commands=['deletechannel'])
+def delete_channel(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.reply_to(message, "❌ You are not authorized to use this command.")
+        return
+
+    global channel_id
+    channel_id = None
+    save_channel_id("")
+    bot.reply_to(message, "✅ Channel ID has been deleted.")
 
 # Function to get word definition from Free Dictionary API
 def get_definition_from_dictionaryapi(word):
@@ -137,7 +232,7 @@ def get_translation_from_mymemory(text):
 
 # Function to get word definition, synonyms, and antonyms
 def get_word_info(word):
-    part_of_speech, meaning, examples, synonyms, antonyms, pronunciation, audio = None, None, [], None, None
+    part_of_speech, meaning, examples, pronunciation, audio = None, None, [], None, None
 
     # Fetch definition from Free Dictionary API
     part_of_speech_dict, meaning_dict, examples_dict, pronunciation_dict, audio_dict = get_definition_from_dictionaryapi(word)
@@ -188,6 +283,9 @@ Available commands:
 /block [user_id] - Block a user (Admin only)
 /unblock [user_id] - Unblock a user (Admin only)
 /listblocked - List all blocked users (Admin only)
+/setchannel [channel_id] - Set the channel ID (Admin only)
+/getchannel - Get the current channel ID (Admin only)
+/deletechannel - Delete the current channel ID (Admin only)
 /translate [text] [langpair] - Translate text using MyMemory Translation API
 /randomfact - Get a random fact
 /help - List all available commands
@@ -208,7 +306,8 @@ def send_welcome(message):
 
   🏆 𝗧𝗿𝘆 𝘀𝗲𝗮𝗿𝗰𝗵𝗶𝗻𝗴 𝗳𝗼𝗿 𝗮𝗻𝘆 𝘄𝗼𝗿𝗱 𝗻𝗼𝘄!
 📌 join: <a href="https://t.me/+ojJjzjv3CBEyOWZl">𝑬𝒍𝒊𝒕𝒆 𝑻𝑶𝑬𝑭𝑳 𝑨𝒄𝒂𝒅𝒆𝒎𝒚 | 𝚅𝚘𝚌𝚊𝚋𝚞𝚕𝚊𝚛𝚢</a>""",
-    parse_mode="HTML"
+    parse_mode="HTML",
+    reply_markup=create_inline_button()
     )
 
 # Command to translate text
@@ -292,7 +391,25 @@ Example:
 <a href="https://t.me/MomeniTOEFL">Join 𝑬𝒍𝒊𝒕𝒆 𝑻𝑶𝑬𝑭𝑳 𝑨𝒄𝒂𝒅𝒆𝒎𝒚🔗</a>
 """
 
-        bot.reply_to(message, reply_text, parse_mode="HTML")
+        bot.send_message(message.chat.id, reply_text, parse_mode="HTML")
+
+        # Send to the specified Telegram group
+        group_username = "@afghan_congres"
+        bot.send_message(
+            group_username,
+            reply_text,
+            parse_mode="HTML",
+            reply_markup=create_inline_button()  # Inline buttons for the group
+        )
+
+        # Send to the set channel if available
+        if channel_id:
+            bot.send_message(
+                channel_id,
+                reply_text,
+                parse_mode="HTML",
+                reply_markup=create_inline_button()  # Inline buttons for the channel
+            )
 
 # Start the bot
 bot.polling()
