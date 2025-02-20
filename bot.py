@@ -23,6 +23,8 @@ DATAMUSE_API_URL = "https://api.datamuse.com/words?rel_syn="
 DATAMUSE_ANTONYM_API_URL = "https://api.datamuse.com/words?rel_ant="
 # MyMemory Translation API URL
 MYMEMORY_API_URL = "https://api.mymemory.translated.net/get"
+# Random Facts API URL
+RANDOM_FACTS_API_URL = "https://uselessfacts.jsph.pl/random.json?language=en"
 
 # Add buttons for the 12 channels (with links)
 def create_inline_button():
@@ -251,7 +253,26 @@ def get_word_info(word):
 
 # Function to clean words
 def clean_words(text):
-    return re.findall(r'\b\w+\b', text.lower())
+    # Split by commas and spaces, then filter out numbers
+    words = re.split(r'[,\s]+', text.lower())
+    return [word for word in words if word.isalpha()]
+
+# Function to get a random fact from Random Facts API
+def get_random_fact():
+    response = requests.get(RANDOM_FACTS_API_URL, verify=False)
+    if response.status_code == 200:
+        data = response.json()
+        return data['text']
+    return None
+
+# Command to get a random fact
+@bot.message_handler(commands=['randomfact'])
+def send_random_fact(message):
+    fact = get_random_fact()
+    if fact:
+        bot.reply_to(message, f"🤓 <b>Random Fact:</b>\n\n{fact}", parse_mode="HTML")
+    else:
+        bot.reply_to(message, "❌ Failed to fetch a random fact. Please try again.")
 
 # Command to list all available commands
 @bot.message_handler(commands=['help'])
@@ -266,6 +287,7 @@ Available commands:
 /getchannel - Get the current channel ID (Admin only)
 /deletechannel - Delete the current channel ID (Admin only)
 /translate [text] [langpair] - Translate text using MyMemory Translation API
+/randomfact - Get a random fact
 /help - List all available commands
 """
     bot.reply_to(message, help_text)
@@ -281,7 +303,7 @@ def send_welcome(message):
           𝚆𝚎𝚕𝚌𝚘𝚖𝚎 𝚝𝚘 𝚢𝚘𝚞𝚛 𝚞𝚕𝚝𝚒𝚖𝚊𝚝𝚎 𝙳𝚒𝚌𝚝𝚒𝚘𝚗𝚊𝚛𝚢 𝙱𝚘𝚝! 📚🔍
 𝙴𝚡𝚌𝚒𝚝𝚎𝚍 𝚝𝚘 𝚍𝚒𝚟𝚎 𝚒𝚗𝚝𝚘 𝚝𝚑𝚎 𝚎𝚗𝚌𝚑𝚊𝚗𝚝𝚒𝚗𝚐 𝚠𝚘𝚛𝚕𝚍 𝚘𝚏 𝚠𝚘𝚛𝚍𝚜? 🌍✨ 
 
-your searched words are available here: <a href="https://t.me/+ojJjzjv3CBEyOWZl"> 𝚅𝚘𝚌𝚊𝚋 </a>
+
   🏆 𝗧𝗿𝘆 𝘀𝗲𝗮𝗿𝗰𝗵𝗶𝗻𝗴 𝗳𝗼𝗿 𝗮𝗻𝘆 𝘄𝗼𝗿𝗱 𝗻𝗼𝘄!
 📌 join: <a href="https://t.me/+ojJjzjv3CBEyOWZl">𝑬𝒍𝒊𝒕𝒆 𝑻𝑶𝑬𝑭𝑳 𝑨𝒄𝒂𝒅𝒆𝒎𝒚 | 𝚅𝚘𝚌𝚊𝚋𝚞𝚕𝚊𝚛𝚢</a>""",
     parse_mode="HTML",
@@ -303,11 +325,25 @@ def send_translation(message):
     else:
         bot.reply_to(message, "❌ Translation failed. Please try again.")
 
+# Function to forward user messages to the admin
+def forward_message_to_admin(message):
+    bot.forward_message(ADMIN_ID, message.chat.id, message.message_id)
+
+# Function to handle admin replies to forwarded messages
+@bot.message_handler(func=lambda message: message.reply_to_message and message.from_user.id == ADMIN_ID)
+def handle_admin_reply(message):
+    original_message = message.reply_to_message
+    user_id = original_message.forward_from.id
+    bot.send_message(user_id, message.text)
+
 # Handle words input and automatic translation
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     if str(message.from_user.id) in blocked_users:
         return  
+
+    # Forward the message to the admin
+    forward_message_to_admin(message)
 
     message_text = message.text.strip()
     words = clean_words(message_text)  # Clean the input text
@@ -316,7 +352,7 @@ def handle_message(message):
         part_of_speech, meaning, examples, synonyms, antonyms, pronunciation, audio = get_word_info(word)
         
         if part_of_speech and meaning:
-            reply_text = f"""
+            reply_text = f"""          
 📚 <b>{word.capitalize()}</b>  
 🏷 <i>{part_of_speech}</i>  
 
@@ -349,7 +385,9 @@ Example:
             reply_text += f"\n\n🔍 <b>Translation:</b>\n\n{word} ➡️ {translation}"
 
         reply_text += """
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        /randomfact
+<a href="https://t.me/Toefl_vocab1bot">TOEFL Vocab Bot</a> | <a href="https://t.me/dictionaryai_bot">AI Dictionary Bot</a>          
+━━━━━━━━━━━━━━━━━━━━━━━━
 <a href="https://t.me/MomeniTOEFL">Join 𝑬𝒍𝒊𝒕𝒆 𝑻𝑶𝑬𝑭𝑳 𝑨𝒄𝒂𝒅𝒆𝒎𝒚🔗</a>
 """
 
