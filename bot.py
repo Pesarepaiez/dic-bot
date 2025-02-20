@@ -395,15 +395,16 @@ Example:
 
         # Send to the specified Telegram group
         group_username = "@afghan_congres"
-        try:
-            bot.send_message(
-                group_username,
-                reply_text,
-                parse_mode="HTML",
-                reply_markup=create_inline_button()  # Inline buttons for the group
-            )
-        except telebot.apihelper.ApiTelegramException as e:
-            print(f"Failed to send message to group {group_username}: {e}")
+        if group_username:
+            try:
+                bot.send_message(
+                    group_username,
+                    reply_text,
+                    parse_mode="HTML",
+                    reply_markup=create_inline_button()  # Inline buttons for the group
+                )
+            except telebot.apihelper.ApiTelegramException as e:
+                print(f"Failed to send message to group {group_username}: {e}")
 
         # Send to the set channel if available
         if channel_id:
@@ -417,5 +418,10 @@ Example:
             except telebot.apihelper.ApiTelegramException as e:
                 print(f"Failed to send message to channel {channel_id}: {e}")
 
-# Start the bot
-bot.polling()
+# Ensure only one instance of the bot is running
+if __name__ == "__main__":
+    try:
+        bot.polling()
+    except Exception as e:
+        print(f"Error: {e}")
+        time.sleep(15)
