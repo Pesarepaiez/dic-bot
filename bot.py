@@ -12,7 +12,7 @@ from urllib3.exceptions import InsecureRequestWarning
 warnings.simplefilter('ignore', InsecureRequestWarning)
 
 # Your Telegram Bot Token
-BOT_TOKEN = "8058388234:AAH1E2l5kS5g4Vmv0XCthqN3H_bSdqmIPkI"
+BOT_TOKEN = "8122882322:AAFc9SNrdpq_nd1vY3dUsD53PTodKj16bMk"
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")  
 
 # Free Dictionary API URL
@@ -336,14 +336,7 @@ def handle_admin_reply(message):
     user_id = original_message.forward_from.id
     bot.send_message(user_id, message.text)
 
-# Function to check if a chat exists
-def chat_exists(chat_id):
-    try:
-        bot.get_chat(chat_id)
-        return True
-    except telebot.apihelper.ApiTelegramException:
-        return False
-
+# Handle words input and automatic translation
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     if str(message.from_user.id) in blocked_users:
@@ -402,34 +395,21 @@ Example:
 
         # Send to the specified Telegram group
         group_username = "@afghan_congres"
-        if group_username and chat_exists(group_username):
-            try:
-                bot.send_message(
-                    group_username,
-                    reply_text,
-                    parse_mode="HTML",
-                    reply_markup=create_inline_button()  # Inline buttons for the group
-                )
-            except telebot.apihelper.ApiTelegramException as e:
-                print(f"Failed to send message to group {group_username}: {e}")
+        bot.send_message(
+            group_username,
+            reply_text,
+            parse_mode="HTML",
+            reply_markup=create_inline_button()  # Inline buttons for the group
+        )
 
         # Send to the set channel if available
-        if channel_id and chat_exists(channel_id):
-            try:
-                bot.send_message(
-                    channel_id,
-                    reply_text,
-                    parse_mode="HTML",
-                    reply_markup=create_inline_button()  # Inline buttons for the channel
-                )
-            except telebot.apihelper.ApiTelegramException as e:
-                print(f"Failed to send message to channel {channel_id}: {e}")
+        if channel_id:
+            bot.send_message(
+                channel_id,
+                reply_text,
+                parse_mode="HTML",
+                reply_markup=create_inline_button()  # Inline buttons for the channel
+            )
 
-# Ensure only one instance of the bot is running
-if __name__ == "__main__":
-    while True:
-        try:
-            bot.polling()
-        except Exception as e:
-            print(f"Error: {e}")
-            time.sleep(15)
+# Start the bot
+bot.polling()
